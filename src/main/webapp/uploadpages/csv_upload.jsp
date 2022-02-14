@@ -10,10 +10,10 @@
 
 <html>
 <head>
-    <title>CSV Read</title>
+    <title>CSV Read and Display</title>
 </head>
 <body>
-<h1>here</h1>
+<h1>CSV Upload</h1>
 <h2>${pageContext.request.contextPath}</h2>
 <form id="upload_csv" enctype="multipart/form-data" method="post" action="${pageContext.request.contextPath}/part4">
     <input id="file_upload" name="csv_file" type="file">

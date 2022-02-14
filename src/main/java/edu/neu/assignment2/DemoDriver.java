@@ -17,7 +17,7 @@ public class DemoDriver
              Statement stmt = conn.createStatement();
 
              // Select the ID and NAME columns from sample.csv
-             ResultSet results = stmt.executeQuery("SELECT * FROM orders1");
+             ResultSet results = stmt.executeQuery("SELECT * FROM parking_facilities");
              ResultSetMetaData keys= results.getMetaData();
              int columns = keys.getColumnCount();
              while (results.next()){

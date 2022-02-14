@@ -28,9 +28,7 @@
     </display-name>
     <web-resource-collection>
       <web-resource-name>csye6220_homework2</web-resource-name>
-      <url-pattern>*.jsp</url-pattern>
-      <url-pattern>*.do</url-pattern>
-      <http-method>GET</http-method>
+      <url-pattern>/part.xls</url-pattern>
       <http-method>POST</http-method>
     </web-resource-collection>
     <user-data-constraint>

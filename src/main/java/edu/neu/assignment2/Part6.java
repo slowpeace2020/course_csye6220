@@ -1,6 +1,5 @@
 package edu.neu.assignment2;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -8,8 +7,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Map;
 
 public class Part6 extends HttpServlet {
 
@@ -32,7 +29,39 @@ public class Part6 extends HttpServlet {
         writer.println("Signature Date: "+req.getParameter("Signature Date"));
         writer.println("HRM Approval: "+req.getParameter("HRM Approval"));
         writer.println("HRM Approval Date: "+req.getParameter("HRM Approval Date"));
-//        writer.println("Course List: "+req.getParameter("Course List"));
+
+        if(req.getParameterValues("courseId[]").length!=0){
+            String[] courses=new String[req.getParameterValues("courseId[]").length];
+            Arrays.fill(courses,"");
+            int i=0;
+            for(String value : req.getParameterValues("courseId[]")){
+                courses[i++]+=value+" ";
+            }
+            i=0;
+            for(String value : req.getParameterValues("courseName[]")){
+                courses[i++]+=value+" ";
+            }
+            i=0;
+            for(String value : req.getParameterValues("supervisorSignature[]")){
+                courses[i++]+=value+" ";
+            }
+            i=0;
+            for(String value : req.getParameterValues("creditHours[]")){
+                courses[i++]+=value+" ";
+            }
+            i=0;
+            for(String value : req.getParameterValues("days[]")){
+                courses[i++]+=value+" ";
+            }
+            i=0;
+            for(String value : req.getParameterValues("time[]")){
+                courses[i++]+=value+" ";
+            }
+            writer.println("Course List: ");
+            for(String course:courses){
+                writer.println(course);
+            }
+        }
         writer.flush();
         writer.close();
     }

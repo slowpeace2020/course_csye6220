@@ -14,7 +14,6 @@ import java.sql.*;
 import java.util.List;
 
 public class CsvDisplay extends HttpServlet {
-    private static final String UPLOAD_DIRECTORY="csv_dir";
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         if(!ServletFileUpload.isMultipartContent(req)){
@@ -33,16 +32,13 @@ public class CsvDisplay extends HttpServlet {
             List<FileItem> fileItems = fileUpload.parseRequest(req);
             if(fileItems.size()>0){
                String filePath  = processUploadField(fileItems.get(0));
-//                String content = readCsv(filePath);
-                String content = readTest();
+                String content = readCsv(filePath);
                 out.println(content);
                 out.flush();
                 out.close();
             }
         } catch (FileUploadException e) {
             e.printStackTrace();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
         }
 
 
@@ -52,15 +48,14 @@ public class CsvDisplay extends HttpServlet {
         try {
             InputStream is = item.getInputStream();
             String savePath = this.getServletContext().getRealPath("/WEB-INF/upload");
-            File saveDir = new File(savePath); // 既代表文件又代表目录
+            File saveDir = new File(savePath);
             if (!saveDir.exists()) {
-                saveDir.mkdirs(); // 就创建一个指定的目录
+                saveDir.mkdirs();
             }
 
             String filename = item.getName();
             if (filename != null) {
                 filename = filename.substring(filename.lastIndexOf(File.separator) + 1);
-                //filename = FilenameUtils.getName(filename); // 效果同上            }
             }
             String filePath = saveDir+File.separator + filename;
             File file = new File(filePath);
@@ -83,13 +78,25 @@ public class CsvDisplay extends HttpServlet {
     }
 
     private String readCsv(String filePath){
-        String dir= filePath.substring(0,filePath.lastIndexOf("/")+1);
+        String fileDir= filePath.substring(0,filePath.lastIndexOf("/")+1);
         String tableName = filePath.substring(filePath.lastIndexOf("/")+1);
         tableName = tableName.substring(0,tableName.lastIndexOf("."));
-        //        String filePath = "/Users/shanchu/IdeaProjects/csye6220_hw2/out/artifacts/csye6220_hw2_war_exploded/WEB-INF/upload/store.xls";
         StringBuilder line = new StringBuilder();
+        line.append("<html>\n" +
+                "<head>\n" +
+                "    <title>CSV Info Display</title>\n" +
+                "</head>\n" +
+                "<body>");
+        line.append("<div id=\"csvTable\">\n" +
+                "        <h1 style=\"text-align: center\">CSV info list</h1>\n" +
+                "        <table border=\"1\" class=\"table table-bordered table-hover\">\n"
+        );
 
-        String fileDir = "/Users/shanchu/IdeaProjects/csye6220_hw2/out/artifacts/csye6220_hw2_war_exploded/WEB-INF/upload/";
+        try {
+            Class.forName("org.relique.jdbc.csv.CsvDriver");
+        } catch (ClassNotFoundException e) {
+            return "org.relique.jdbc.csv.CsvDriver ClassNotFoundException";
+        }
 
         String url = "jdbc:relique:csv:" + fileDir + "?" +
                 "separator=;" + "&" + "fileExtension=.csv";
@@ -97,54 +104,38 @@ public class CsvDisplay extends HttpServlet {
         try {
             conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
-
-            // Select the ID and NAME columns from sample.csv
             ResultSet results = stmt.executeQuery("SELECT * FROM "+tableName);
             ResultSetMetaData keys= results.getMetaData();
-            int columns = keys.getColumnCount();
+            String column = keys.getColumnName(1);
+            line.append("<tr>");
+            for(String col:column.split(",")){
+                line.append("<td>");
+                line.append(col);
+                line.append("</td>");
+            }
+            line.append("</tr>");
+            int columns = column.split(",").length;
             while (results.next()){
-                for(int i=1;i<=columns;i++){
-                    line.append(results.getObject(i));
-                    line.append(" ");
+                line.append("<tr>");
+                String record = (String) results.getObject(1);
+                String values[] = record.trim().split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)",-1);
+                for(int i=0;i<columns;i++){
+                    line.append("<td>");
+                    if(i<values.length){
+                        line.append(values[i].replace("\"",""));
+                    }
+                    line.append("</td>");
                 }
-                line.append("\n");
+                line.append("</tr>");
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-
+        line.append("        </table>\n" +
+                "</div>\n" +
+                "</body>\n" +
+                "</html>");
         return line.toString();
     }
 
-    private String readTest() throws SQLException {
-
-//        String filePath = "/Users/shanchu/IdeaProjects/csye6220_hw2/out/artifacts/csye6220_hw2_war_exploded/WEB-INF/upload/store.xls";
-            String filePath = "/Users/shanchu/IdeaProjects/csye6220_hw2/out/artifacts/csye6220_hw2_war_exploded/WEB-INF/upload/";
-
-            String url = "jdbc:relique:csv:" + filePath + "?" +
-                    "separator=;" + "&" + "fileExtension=.csv";
-            Connection conn = DriverManager.getConnection(url);
-
-
-            Statement stmt = conn.createStatement();
-
-            // Select the ID and NAME columns from sample.csv
-            ResultSet results = stmt.executeQuery("SELECT * FROM orders1");
-            ResultSetMetaData keys= results.getMetaData();
-            int columns = keys.getColumnCount();
-        StringBuilder line = new StringBuilder();
-
-        while (results.next()){
-                for(int i=1;i<=columns;i++){
-                    line.append(results.getObject(i));
-                    line.append(" ");
-                }
-                System.out.println(line);
-                break;
-            }
-
-
-        return line.toString();
-
-    }
 }

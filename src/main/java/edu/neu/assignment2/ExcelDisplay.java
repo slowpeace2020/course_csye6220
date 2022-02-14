@@ -19,13 +19,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-@WebServlet("/part5")
+@WebServlet("/part5.xls")
 public class ExcelDisplay extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         if(!ServletFileUpload.isMultipartContent(req)){
             PrintWriter out = resp.getWriter();
-            out.println("file type error!");
+            out.print("file type error!");
             out.flush();
             out.close();
         }
@@ -38,19 +38,14 @@ public class ExcelDisplay extends HttpServlet {
             List<FileItem> fileItems = fileUpload.parseRequest(req);
             if(fileItems.size()>0){
                 String filePath  = processUploadField(fileItems.get(0));
-                 readExcel(filePath,req);
-
+                 readExcel(filePath,resp);
             }
         } catch (FileUploadException e) {
             e.printStackTrace();
         }
-
-
-        req.getRequestDispatcher("/uploadpages/excel_display.jsp").forward(req,resp);
-
     }
 
-    private void readExcel(String filePath,HttpServletRequest req) {
+    private void readExcel(String filePath,HttpServletResponse resp) {
         Workbook workbook = null;
         try {
             workbook = WorkbookFactory.create(new File(filePath));
@@ -60,45 +55,145 @@ public class ExcelDisplay extends HttpServlet {
             e.printStackTrace();
         }
 
-        // Retrieving the number of sheets in the Workbook
-        System.out.println("Workbook has " + workbook.getNumberOfSheets() + " Sheets : ");
+        PrintWriter out = null;
+        try {
+             out = resp.getWriter();
+             out.print("<html>\n" +
+                     "<head>\n" +
+                     "    <title>Excel Info Display</title>\n" +
+                     "</head>\n" +
+                     "<body>");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        /*
-           =============================================================
-           Iterating over all the sheets in the workbook (Multiple ways)
-           =============================================================
-        */
 
-        // 1. You can obtain a sheetIterator and iterate over it
         Iterator<Sheet> sheetIterator = workbook.sheetIterator();
-        System.out.println("Retrieving Sheets using Iterator");
+        System.out.print("Retrieving Sheets using Iterator");
         while (sheetIterator.hasNext()) {
             Sheet sheet = sheetIterator.next();
-            System.out.println("=> " + sheet.getSheetName());
+            System.out.print("=> " + sheet.getSheetName());
             String sheetName = sheet.getSheetName();
 
-            if(sheetName.contains("Orders")){                List<Order> list =  readOrderExcel(sheet);
-                req.setAttribute("orders",list);
+            if(sheetName.contains("Orders")){
+                out.print("<div id=\"orderTable\"></div>\n" +
+                        "    <h3 style=\"text-align: center\">order info list</h3>\n" +
+                        "    <table border=\"1\" class=\"table table-bordered table-hover\">\n" +
+                        "        <tr class=\"success\">\n" +
+                        "            <th>Row Id</th>\n" +
+                        "            <th>Order Id</th>\n" +
+                        "            <th>Order Date</th>\n" +
+                        "            <th>Ship Date</th>\n" +
+                        "            <th>Ship Mode</th>\n" +
+                        "            <th>Customer Id</th>\n" +
+                        "            <th>Customer Name</th>\n" +
+                        "            <th>Segment</th>\n" +
+                        "            <th>Country</th>\n" +
+                        "            <th>City</th>\n" +
+                        "            <th>State</th>\n" +
+                        "            <th>Postal Code</th>\n" +
+                        "            <th>Region</th>\n" +
+                        "            <th>Product Id</th>\n" +
+                        "            <th>Category</th>\n" +
+                        "            <th>Sub-Category</th>\n" +
+                        "            <th>Product Name</th>\n" +
+                        "            <th>Sales</th>\n" +
+                        "            <th>Quality</th>\n" +
+                        "            <th>Discount</th>\n" +
+                        "            <th>Profit</th>\n" +
+                        "        </tr>");
+                List<Order> list =  readOrderExcel(sheet);
+                int index =1;
+                for(Order order:list){
+                    out.print("<tr>");
+                    out.print("<td>");
+                    out.print(index++);
+                    out.print("</td>\n");
+                    out.println("<td>" +order.getOrderID()+ "</td>\n" +
+                            "<td>" +order.getOrderDate()+ "</td>\n" +
+                            "<td>" +order.getShipDate()+      "</td>\n" +
+                            "<td>" +order.getShipMode()+"</td>\n" +
+                            "<td>" +order.getCustomerID()+"</td>\n" +
+                            "<td>" +order.getCustomerName()+"</td>\n" +
+                            "<td>" +order.getSegment()+"</td>\n" +
+                            "<td>" +order.getCountry()+"</td>\n" +
+                            "<td>" +order.getCity()+"</td>\n" +
+                            "<td>" +order.getState()+"</td>\n" +
+                            "<td>" +order.getPostalCode()+"</td>\n" +
+                            "<td>" +order.getRegion()+"</td>\n" +
+                            "<td>" +order.getProductID()+"</td>\n" +
+                            "<td>" +order.getCategory()+"</td>\n" +
+                            "<td>" +order.getSubCategory()+"</td>\n" +
+                            "<td>" +order.getProductName()+"</td>\n" +
+                            "<td>" +order.getSales()+"</td>\n" +
+                            "<td>" +order.getQuantity()+"</td>\n" +
+                            "<td>" +order.getDiscount()+"</td>\n" +
+                            "<td>"+order.getProfit()+"</td>\n") ; 
+                    out.print("</tr>");
+                }
+
+                out.println("    </table>\n" +
+                        "</div>");
             }else  if(sheetName.contains("Returns")){
                 List<Returns> list =  readReturnsExcel(sheet);
-                req.setAttribute("returns",list);
+                int index=1;
+                out.print("<div id=\"returnTable\">\n" +
+                        "    <h3 style=\"text-align: center\">return info list</h3>\n" +
+                        "    <table border=\"1\" class=\"table table-bordered table-hover\">\n" +
+                        "        <tr class=\"success\">\n" +
+                        "            <th>Id</th>\n" +
+                        "            <th>orderId</th>\n" +
+                        "            <th>returned</th>\n" +
+                        "        </tr>");
+                for(Returns people:list){
+                    out.print("<tr>");
+                    out.print("<td>");
+                    out.print(index++);
+                    out.print("</td>\n");
+                    out.println("<td>" +people.getOrderId()+ "</td>\n" +
+                            "<td>" +people.getReturned()+ "</td>\n");
+                    out.print("</tr>");
+                }
+                out.println("    </table>\n" +
+                        "</div>");
 
             }else  if(sheetName.contains("People")){
+                out.print("<div id=\"peopleTable\">\n" +
+                        "        <h3 style=\"text-align: center\">people info list</h3>\n" +
+                        "        <table border=\"1\" class=\"table table-bordered table-hover\">\n" +
+                        "            <tr class=\"success\">\n" +
+                        "                <th>Id</th>\n" +
+                        "                <th>Name</th>\n" +
+                        "                <th>Region</th>\n" +
+                        "            </tr>");
                 List<People> list =  readPeopleExcel(sheet);
-                req.setAttribute("people",list);
+                int index=1;
+                for(People people:list){
+                    out.print("<tr>");
+                    out.print("<td>");
+                    out.print(index++);
+                    out.print("</td>\n");
+                    out.println("<td>" +people.getName()+ "</td>\n" +
+                            "<td>" +people.getRegion()+ "</td>\n");
+                    out.print("</tr>");
+                }
+                out.println("    </table>\n" +
+                        "</div>");
             }
         }
 
+        out.print("</body>\n" +
+                "</html>");
     }
 
 
     private List<Order> readOrderExcel(Sheet sheet){
         List<Order> rowList = new ArrayList<>();
         Integer totalRows = 0;
-        totalRows = sheet.getPhysicalNumberOfRows();	// 获取工作表的总行数
+        totalRows = sheet.getPhysicalNumberOfRows();
         for (int i = 1; i < totalRows; i++) {
-            Row row = sheet.getRow(i);	// 获取行对象
-            // 去除空行
+            Row row = sheet.getRow(i);
+            // skip empty row
             if (row == null) {
                 continue;
             }
@@ -132,10 +227,9 @@ public class ExcelDisplay extends HttpServlet {
     private List<Returns> readReturnsExcel(Sheet sheet){
         List<Returns> rowList = new ArrayList<>();
         Integer totalRows = 0;
-        totalRows = sheet.getPhysicalNumberOfRows();	// 获取工作表的总行数
+        totalRows = sheet.getPhysicalNumberOfRows();
         for (int i = 1; i < totalRows; i++) {
-            Row row = sheet.getRow(i);	// 获取行对象
-            // 去除空行
+            Row row = sheet.getRow(i);
             if (row == null) {
                 continue;
             }
@@ -152,10 +246,9 @@ public class ExcelDisplay extends HttpServlet {
     private List<People> readPeopleExcel(Sheet sheet){
         List<People> rowList = new ArrayList<>();
         Integer totalRows = 0;
-        totalRows = sheet.getPhysicalNumberOfRows();	// 获取工作表的总行数
+        totalRows = sheet.getPhysicalNumberOfRows();
         for (int i = 1; i < totalRows; i++) {
-            Row row = sheet.getRow(i);	// 获取行对象
-            // 去除空行
+            Row row = sheet.getRow(i);
             if (row == null) {
                 continue;
             }
@@ -163,13 +256,14 @@ public class ExcelDisplay extends HttpServlet {
             People order = new People();
             order.setName(getCellValue(row.getCell(0)));
             order.setRegion(getCellValue(row.getCell(1)));
+            if(order.getName()==null||order.getName().length()==0){
+                continue;
+            }
             rowList.add(order);
         }
 
         return rowList;
     }
-
-
 
 
     private String getCellValue(Cell cell){
@@ -190,7 +284,6 @@ public class ExcelDisplay extends HttpServlet {
             String filename = item.getName();
             if (filename != null) {
                 filename = filename.substring(filename.lastIndexOf(File.separator) + 1);
-                //filename = FilenameUtils.getName(filename); // 效果同上            }
             }
             String filePath = saveDir+File.separator + filename;
             File file = new File(filePath);

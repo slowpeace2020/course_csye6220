@@ -12,7 +12,7 @@
 </head>
 <body>
 <h1>Excel Upload</h1>
-<form id="upload_csv" enctype="multipart/form-data" method="post" action="${pageContext.request.contextPath}/part5">
+<form id="upload_csv" enctype="multipart/form-data" method="post" action="${pageContext.request.contextPath}/part5.xls">
     <input id="file_upload" name="excel_file" type="file">
     <input type="submit" value="submit">
 </form>
